@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Open Sans", serif;
+    font-weight: 400;
+    font-optical-sizing: auto;
+}
+
+body {
+    background-color: #121212;
+    color: #fff;
+}
+
+h1 {
+    @apply text-2xl;
+}
+
+input[type="text"] {
+    @apply px-4 py-3 text-neutral-800 rounded-xl border-0 outline-none;
+}
+
+@layer utilities {
+    .fade-in-enlarge {
+        @apply animate-fade-in-enlarge;
+    }
+}
