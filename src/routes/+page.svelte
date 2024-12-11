@@ -1,8 +1,24 @@
 <script lang="ts">
-    let steamId = $state('')
-    let steamIdValid = $state(false)
+    import { goto } from "$app/navigation";
+    import type { SteamUser } from "$lib/steamapi";
+    import axios, { type AxiosResponse } from "axios";
+    import { onMount } from "svelte";
 
-    let isInputTouched = $derived(steamId.length > 0)
+    let steamId = $state('');
+    let steamIdValid = $state(false);
+    let steamUser = $state<SteamUser|null>(null);
+    let loadingUser = $state(false);
+
+    let isInputFilled = $derived(steamId.length === 17);
+
+    onMount(() => {
+        const savedUser = window.localStorage.getItem('steamUser');
+
+        if (savedUser) {
+            console.log('saved user', savedUser);
+            goto('/home');
+        }
+    })
 
     const onSteamIdInput = (e: Event) => {
         const input = e.target as HTMLInputElement;
@@ -14,10 +30,31 @@
 
     const validateSteamId = () => {
         steamIdValid = /^7656119\d{10}$/.test(steamId);
+
+        if (steamIdValid) {
+            loadingUser = true;
+            axios.get('/api/steam/user', {
+                params: { steamid: steamId }
+            })
+            .then((response) => {
+                steamUser = response.data;
+                loadingUser = false;
+            })
+        } else {
+            steamUser = null;
+        }
+    }
+
+    const confirmId = () => {
+        // Save user to local storage
+        window.localStorage.setItem('steamUser', JSON.stringify(steamUser));
+        
+        // Navigate to home page
+        goto('/home');
     }
 </script>
 
-<div class="w-screen h-screen overflow-hidden flex justify-center pt-32 lg:pt-72">
+<div class="w-screen h-screen overflow-hidden flex justify-center pt-32 lg:pt-64">
     <div class="flex flex-col lg:items-center gap-4 p-10">
         <h1 class="fade-in-enlarge lg:mb-2">
             Hi, welcome to <strong>Steam&nbsp;Wishlist&nbsp;Manager</strong>
@@ -35,16 +72,28 @@
                 oninput={onSteamIdInput}
             />
             <span 
-                class="w-full text-neutral-600 text-sm mt-2"
-                class:opacity-0={!isInputTouched}
-                class:text-green-500={steamIdValid}
+                class="w-full text-sm mt-2"
+                class:opacity-0={!isInputFilled}
+                class:text-neutral-600={!steamUser}
+                class:text-green-500={steamUser}
             >
-                {#if steamIdValid}
-                    What's up, username!
+                {#if loadingUser}
+                    Checking...
+                {:else if steamIdValid && steamUser}
+                    What's up, <strong>{steamUser?.username}</strong>!
                 {:else}
                     Invalid Steam ID
                 {/if}
             </span>
         </div>
+        <button 
+            type="button"
+            class="px-10 py-3 rounded-xl transition-all bg-violet-500 hover:bg-violet-400"
+            class:opacity-0={!steamUser}
+            class:opacity-1={steamUser}
+            onclick={confirmId}
+        >
+            Let's go!
+        </button>
     </div>
 </div>
