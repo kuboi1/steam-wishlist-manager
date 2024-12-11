@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import Button from "$lib/components/Button.svelte";
     import type { SteamUser } from "$lib/steamapi";
     import axios, { type AxiosResponse } from "axios";
     import { onMount } from "svelte";
@@ -54,8 +55,8 @@
     }
 </script>
 
-<div class="w-screen h-screen overflow-hidden flex justify-center pt-32 lg:pt-64">
-    <div class="flex flex-col lg:items-center gap-4 p-10">
+<div class="w-screen h-screen overflow-hidden flex justify-center items-center">
+    <div class="flex flex-col lg:items-center gap-4">
         <h1 class="fade-in-enlarge lg:mb-2">
             Hi, welcome to <strong>Steam&nbsp;Wishlist&nbsp;Manager</strong>
         </h1>
@@ -86,14 +87,10 @@
                 {/if}
             </span>
         </div>
-        <button 
-            type="button"
-            class="px-10 py-3 rounded-xl transition-all bg-violet-500 hover:bg-violet-400"
-            class:opacity-0={!steamUser}
-            class:opacity-1={steamUser}
+        <Button 
             onclick={confirmId}
-        >
-            Let's go!
-        </button>
+            cta="Let's go"
+            className={steamUser ? 'opacity-1' : 'opacity-0'}
+        />
     </div>
 </div>
