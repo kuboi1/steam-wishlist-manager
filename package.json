@@ -10,6 +10,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
+		"@iconify/svelte": "^4.0.2",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/kit": "^2.9.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
@@ -22,6 +23,7 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
-		"axios": "^1.7.8"
+		"axios": "^1.7.8",
+		"iconify-icon": "^2.1.0"
 	}
 }
