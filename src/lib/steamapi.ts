@@ -18,9 +18,11 @@ export interface SteamGame {
     type: string,
     name: string,
     isFree: boolean,
+    releaseDate: string,
     shortDescription: string,
     headerImageUrl: string,
     capsuleImageUrl: string,
+    bgImage: string,
     developers: string[],
     publishers: string[],
     categories: SteamGameCategory[],
@@ -28,14 +30,14 @@ export interface SteamGame {
     price?: SteamGamePrice
 }
 
-interface SteamGameCategory {
+export interface SteamGameCategory {
     id: string,
-    name: string
+    description: string
 }
 
-interface SteamGameGenre {
+export interface SteamGameGenre {
     id: string,
-    name: string
+    description: string
 }
 
 interface SteamGamePrice {
@@ -51,7 +53,8 @@ interface SteamGameReleaseDate {
 
 export interface SteamWishlist {
     steamId: string,
-    items: SteamWishlistItem[]
+    items: SteamWishlistItem[],
+    pageCount: number
 }
 
 export interface SteamWishlistItem {
@@ -97,18 +100,12 @@ export async function getSteamUser(steamId: string): Promise<SteamUser|null> {
 }
 
 export async function getWishlist(steamId: string, pageNum: number, itemsPerPage = 20): Promise<SteamWishlist|null> {
-    const response = await axios.get(
-        STEAM_API_WISHLIST_URL, 
-        {
-            params: {
-                steamid: steamId
-            }
-        }
-    );
+    let wishlistItems = await getWishlistItems(steamId);
 
-    if (response.status !== 200) return null;
+    if (!wishlistItems) return null;
 
-    let wishlistItems: WishlistResponseItem[] = response.data.response.items;
+    const pageCount = Math.round(wishlistItems.length / itemsPerPage);
+
     wishlistItems = wishlistItems.slice(pageNum * itemsPerPage, (pageNum * itemsPerPage) + itemsPerPage);
 
     const items: SteamWishlistItem[] = [];
@@ -120,7 +117,22 @@ export async function getWishlist(steamId: string, pageNum: number, itemsPerPage
         }
     }
 
-    return { steamId, items };
+    return { steamId, items, pageCount };
+}
+
+export async function getWishlistItems(steamId: string): Promise<WishlistResponseItem[]|null> {
+    const response = await axios.get(
+        STEAM_API_WISHLIST_URL, 
+        {
+            params: {
+                steamid: steamId
+            }
+        }
+    );
+
+    if (response.status !== 200) return null;
+
+    return response.data.response.items as WishlistResponseItem[];
 }
 
 export async function getSteamGame(appId: number): Promise<SteamGame|null> {
@@ -145,9 +157,11 @@ export async function getSteamGame(appId: number): Promise<SteamGame|null> {
         type: game.type,
         name: game.name,
         isFree: game.is_free,
+        releaseDate: game.release_date.date,
         shortDescription: game.short_description,
         headerImageUrl: game.header_image,
         capsuleImageUrl: game.capsule_image,
+        bgImage: game.screenshots[0].path_full,
         developers: game.developers,
         publishers: game.publishers,
         categories: game.categories,
