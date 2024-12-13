@@ -1,8 +1,9 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import Button from "$lib/components/Button.svelte";
+    import { getLocalStorageItem, LS_KEY_USER, setLocalStorageItem } from "$lib/localstorage";
     import type { SteamUser } from "$lib/steamapi";
-    import axios, { type AxiosResponse } from "axios";
+    import axios from "axios";
     import { onMount } from "svelte";
 
     let steamId = $state('');
@@ -12,12 +13,12 @@
 
     let isInputFilled = $derived(steamId.length === 17);
 
-    onMount(() => {
-        const savedUser = window.localStorage.getItem('steamUser');
+    onMount(async () => {
+        const savedUser = await getLocalStorageItem(LS_KEY_USER);
 
         if (savedUser) {
             console.log('saved user', savedUser);
-            goto('/home');
+            await goto('/wishlist');
         }
     })
 
@@ -48,7 +49,7 @@
 
     const confirmId = () => {
         // Save user to local storage
-        window.localStorage.setItem('steamUser', JSON.stringify(steamUser));
+        setLocalStorageItem(LS_KEY_USER, steamUser, null);
         
         // Navigate to home page
         goto('/home');
