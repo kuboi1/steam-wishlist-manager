@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import { bulkRemoveLocalStorageItems, LS_KEY_USER, LS_KEY_WISHLIST } from "$lib/localstorage";
     import type { SteamUser } from "$lib/steamapi";
     import Icon from "@iconify/svelte";
     import axios from "axios";
@@ -28,11 +29,14 @@
             profileRefreshing = false;
             profileRefreshAvailable = false;
             setTimeout(() => profileRefreshAvailable = true, 3000);
-        })
+        });
     }
 
     const switchProfile = () => {
-        window.localStorage.removeItem('steamUser');
+        bulkRemoveLocalStorageItems([
+            LS_KEY_USER,
+            LS_KEY_WISHLIST
+        ]);
         goto('/');
     }
 </script>
