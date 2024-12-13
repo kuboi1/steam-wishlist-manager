@@ -6,10 +6,11 @@
         cta: string,
         variant?: 'primary' | 'secondary'
         className?: string,
-        loading?: boolean
+        loading?: boolean,
+        disabled?: boolean
     }
 
-    let { onclick, cta, variant, className, loading }: Props = $props();
+    let { onclick, cta, variant, className, loading, disabled }: Props = $props();
 
     variant = variant ?? 'primary';
 </script>
@@ -18,10 +19,12 @@
     type="button"
     class={`
         px-10 py-3 rounded-xl transition-all flex items-center gap-1
-        ${variant === 'primary' && 'bg-violet-500 hover:bg-violet-400'}
+        disabled:bg-neutral-400
+        ${variant === 'primary' && 'bg-sky-500 hover:bg-sky-400'}
         ${className}
     `}
     onclick={onclick}
+    disabled={disabled ?? false}
 >
     <span>{cta}</span>
     {#if loading}
