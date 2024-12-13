@@ -5,8 +5,13 @@ export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
     extend: {
+      screens: {
+        '3xl': '1800px',
+        '4xl': '2000px'
+      },
       animation: {
-        'fade-in-enlarge': 'fade-in-enlarge 1s ease-out forwards'
+        'fade-in-enlarge': 'fade-in-enlarge 1s ease-out forwards',
+        'text-gradient': 'textGradient 1.5s ease-in-out infinite'
       },
       keyframes: {
         'fade-in-enlarge': {
@@ -22,8 +27,13 @@ export default {
             transform: 'scale(1)',
             opacity: 1,
           },
+        },
+        textGradient: {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' }
         }
-      },
+      }
     },
   },
   plugins: [],
