@@ -24,6 +24,10 @@ input[type="text"] {
     @apply px-4 py-3 text-neutral-800 rounded-xl border-0 outline-none;
 }
 
+.flex-fill {
+    flex: 1;
+}
+
 @layer utilities {
     .fade-in-enlarge {
         @apply animate-fade-in-enlarge;
