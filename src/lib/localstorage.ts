@@ -14,7 +14,7 @@ interface LocalStorageItem {
 export function setLocalStorageItem(
     key: string, 
     value: {[key: string]: any}|string|number|null, 
-    expirationSeconds: number|null = 21600
+    expirationSeconds: number|null = null
 ): void {
     const item: LocalStorageItem = {
         created: Date.now(),
@@ -28,7 +28,7 @@ export function setLocalStorageItem(
 export async function getLocalStorageItem(
     key: string, 
     refreshCallback?: () => Promise<{[key: string]: any}|string|number|null>,
-    refreshExpirationSeconds: number|null = 216000
+    refreshExpirationSeconds: number|null = null
 ): Promise<{[key: string]: any}|string|number|null> {
     const itemString = window.localStorage.getItem(key);
 
