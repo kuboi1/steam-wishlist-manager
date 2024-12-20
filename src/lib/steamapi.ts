@@ -5,6 +5,7 @@ import { STEAM_API_KEY } from '$env/static/private';
 const STEAM_API_USER_URL = 'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v1';
 const STEAM_API_GAME_URL = 'https://store.steampowered.com/api/appdetails';
 const STEAM_API_WISHLIST_URL = 'https://api.steampowered.com/IWishlistService/GetWishlist/v1';
+const STEAM_API_REVIEWS_URL = 'https://store.steampowered.com/appreviews';
 
 
 export interface SteamUser {
@@ -18,7 +19,7 @@ export interface SteamGame {
     type: string,
     name: string,
     isFree: boolean,
-    releaseDate: string,
+    releaseDate: SteamGameReleaseDate,
     shortDescription: string,
     headerImageUrl: string,
     capsuleImageUrl: string,
@@ -27,6 +28,7 @@ export interface SteamGame {
     publishers: string[],
     categories: SteamGameCategory[],
     genres: SteamGameGenre[],
+    reviews?: SteamGameReviews,
     price?: SteamGamePrice
 }
 
@@ -41,14 +43,23 @@ export interface SteamGameGenre {
 }
 
 interface SteamGamePrice {
-    initial: string,
-    final: string,
-    discountPercent: number
+    initial: number,
+    final: number,
+    discountPercent: number,
+    currency: string
 }
 
 interface SteamGameReleaseDate {
     comingSoon: boolean,
     date: string
+}
+
+interface SteamGameReviews {
+    total: number,
+    positive: number,
+    negative: number,
+    score: number,
+    label: string
 }
 
 export interface SteamWishlist {
@@ -99,7 +110,12 @@ export async function getSteamUser(steamId: string): Promise<SteamUser|null> {
     };
 }
 
-export async function getWishlist(steamId: string, pageNum: number, itemsPerPage = 20): Promise<SteamWishlist|null> {
+export async function getWishlist(
+    steamId: string, 
+    pageNum: number, 
+    itemsPerPage: number,
+    excludeIds: string[]
+): Promise<SteamWishlist|null> {
     let wishlistItems = await getWishlistItems(steamId);
 
     if (!wishlistItems) return null;
@@ -111,9 +127,14 @@ export async function getWishlist(steamId: string, pageNum: number, itemsPerPage
     const items: SteamWishlistItem[] = [];
 
     for (const item of wishlistItems) {
+        if (excludeIds.includes(String(item.appid))) continue;
+
         const game = await getSteamGame(item.appid);
-        if (game) {
-            items.push({ game, dateAdded: new Date(item.date_added * 1000)});
+
+        if (game === 429) break;
+
+        if (game && (typeof game !== 'number')) {
+            items.push({ game: game, dateAdded: new Date(item.date_added * 1000)});
         }
     }
 
@@ -135,8 +156,8 @@ export async function getWishlistItems(steamId: string): Promise<WishlistRespons
     return response.data.response.items as WishlistResponseItem[];
 }
 
-export async function getSteamGame(appId: number): Promise<SteamGame|null> {
-    const response = await axios.get(
+export async function getSteamGame(appId: number): Promise<SteamGame|null|number> {
+    const gameResponse = await axios.get(
         STEAM_API_GAME_URL, 
         {
             params: {
@@ -146,30 +167,65 @@ export async function getSteamGame(appId: number): Promise<SteamGame|null> {
         }
     );
 
-    if (response.status !== 200 || Object.values(response.data).length === 0) return null;
+    if (gameResponse.status === 429) return 429;
 
-    const game = (Object.values(response.data)[0] as GameResponseItem).data;
+    if (gameResponse.status !== 200 || Object.values(gameResponse.data).length === 0) return null;
+
+    const game = (Object.values(gameResponse.data)[0] as GameResponseItem).data;
     
     if (!game) return null;
+
+    // Fetch reviews
+    const reviewsResponse = await axios.get(
+        `${STEAM_API_REVIEWS_URL}/${appId}`, 
+        {
+            params: {
+                json: 1,
+                use_review_quality: 1,
+                language: 'all',
+                review_type: 'all',
+                purchase_type: 'all',
+                playtime_type: 'all'
+            }
+        }
+    );
+    const reviewsData = reviewsResponse.data.query_summary;
+
+    let reviews: SteamGameReviews|undefined = undefined;
+
+    if (reviewsResponse.status === 200 && reviewsData) {
+        reviews = {
+            total: reviewsData.total_reviews,
+            positive: reviewsData.total_positive,
+            negative: reviewsData.total_negative,
+            score: reviewsData.total_positive / reviewsData.total_reviews,
+            label: reviewsData.review_score_desc
+        };
+    }
 
     return {
         id: game.steam_appid,
         type: game.type,
         name: game.name,
         isFree: game.is_free,
-        releaseDate: game.release_date.date,
+        releaseDate: {
+            comingSoon: game.release_date.coming_soon,
+            date: game.release_date.date
+        },
         shortDescription: game.short_description,
         headerImageUrl: game.header_image,
         capsuleImageUrl: game.capsule_image,
-        bgImage: game.screenshots[0].path_full,
+        bgImage: (game.screenshots && game.screenshots.length > 0) ? game.screenshots[0].path_full : game.capsule_image,
         developers: game.developers,
         publishers: game.publishers,
         categories: game.categories,
         genres: game.genres,
+        reviews: reviews,
         price: game.price_overview ? {
-            initial: game.price_overview.initial_formatted,
-            final: game.price_overview.final_formatted,
+            initial: game.price_overview.initial / 100,
+            final: game.price_overview.final / 100,
             discountPercent: game.price_overview.discount_percent,
+            currency: '€' // Maybe currency select in the future
         } : undefined
     };
 }
