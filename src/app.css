@@ -33,3 +33,20 @@ input[type="text"] {
         @apply animate-fade-in-enlarge;
     }
 }
+
+/* SCROLL BAR */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-neutral-200 rounded-md;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-neutral-600 rounded-md;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-neutral-800;
+}
