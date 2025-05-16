@@ -37,6 +37,6 @@
 
 <svelte:window on:scroll={handleScroll} bind:scrollY={scrollY} bind:innerHeight={viewportHeight} />
 
-<div bind:this={container}>
+<div class="w-full min-h-screen" bind:this={container}>
     {@render children()}
 </div>

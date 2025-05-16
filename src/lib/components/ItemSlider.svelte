@@ -27,18 +27,20 @@
         updateOverflow();
     });
 
-    const handleMouseDown = (e: MouseEvent) => {
+    const handleDragStart = (e: MouseEvent|TouchEvent) => {
         if (!isOverflowing || !container) return;
 
+        const source = e instanceof MouseEvent ? e : e.touches[0];
+
         isDragging = true;
-        startX = e.clientX;
+        startX = source.clientX;
         scrollStart = container.scrollLeft;
         scrollVelocity = 0;
 
         cancelAnimationFrame(animationFrame);
     }
 
-    const handleMouseUp = () => {
+    const handleDragEnd = () => {
         if (!isOverflowing) return;
 
         isDragging = false;
@@ -46,26 +48,22 @@
         scroll();
     }
 
-    const handleMouseLeave = () => {
-        if (!isOverflowing) return;
-
-        isDragging = false;
-    }
-
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleDragMove = (e: MouseEvent|TouchEvent) => {
         if (!isDragging || !container || !isOverflowing) return;
 
-        const dx = e.clientX - startX;
+        const source = e instanceof MouseEvent ? e : e.touches[0];
+
+        const dx = source.clientX - startX;
         container.scrollLeft -= scrollVelocity;
 
-        scrollVelocity = e.clientX - startX;
-        startX = e.clientX;
+        scrollVelocity = source.clientX - startX;
+        startX = source.clientX;
     }
 
     const updateOverflow = () => {
         if (!isOverflowing || !container) return;
 
-        overflowingRight = container.scrollLeft + container.clientWidth < container.scrollWidth;
+        overflowingRight = (container.scrollLeft + container.clientWidth) < (container.scrollWidth - 5);
         overflowingLeft = container.scrollLeft > 0;
     }
 
@@ -91,10 +89,14 @@
         class:cursor-grab={isOverflowing && !isDragging}
         class:cursor-grabbing={isOverflowing && isDragging}
         bind:this={container}
-        onmousedown={handleMouseDown}
-        onmouseup={handleMouseUp}
-        onmouseleave={handleMouseLeave}
-        onmousemove={handleMouseMove}
+        onmousedown={handleDragStart}
+        ontouchstart={handleDragStart}
+        onmouseup={handleDragEnd}
+        ontouchend={handleDragEnd}
+        onmouseleave={handleDragEnd}
+        ontouchcancel={handleDragEnd}
+        onmousemove={handleDragMove}
+        ontouchmove={handleDragMove}
         onscroll={updateOverflow}
         role="application"
         aria-label="Scrollable container for items"

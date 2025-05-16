@@ -4,6 +4,7 @@ export const LS_KEY_WISHLIST = 'steamWishlist';
 export const LS_KEY_WISHLIST_CURRENT_PAGE = 'steamWishlistCurrentPage';
 export const LS_KEY_GAME_CATEGORIES = 'steamGameCategories';
 export const LS_KEY_GAME_GENRES = 'steamGameGenres';
+export const LS_KEY_LAST_FETCH = 'lastFetch';
 
 interface LocalStorageItem {
     created: number,

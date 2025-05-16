@@ -11,6 +11,8 @@
 
     let { user }: Props = $props();
 
+    const profileLink = `https://steamcommunity.com/profiles/${user?.id}`;
+
     let profileRefreshAvailable = $state(true);
     let profileRefreshing = $state(false);
 
@@ -42,14 +44,19 @@
 </script>
 
 <div class="flex gap-4">
-    <img 
-        src={user?.avatarUrl} 
-        alt="Profile" 
-        class="w-16 rounded-full"
-    />
+    <a
+        href={profileLink}
+        target="_blank"
+        class="w-16 rounded-full overflow-hidden hover:scale-105 transition-transform"
+    >
+        <img 
+            src={user?.avatarUrl} 
+            alt="Profile"
+        />
+    </a>
     <div class="py-1 space-y-1">
         <div class="text-lg flex items-center gap-1">
-            {user?.username}
+            <a href={profileLink} target="_blank">{user?.username}</a>
             <button
                 type="button"
                 title={`Refresh ${profileRefreshAvailable ? 'Profile' : 'Unavailable'}`}

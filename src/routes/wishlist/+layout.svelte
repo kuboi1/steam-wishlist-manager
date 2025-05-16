@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount, type Snippet } from 'svelte';
-    import type { LayoutData } from './$types';
     import { getLocalStorageItem, LS_KEY_USER } from '$lib/localstorage';
     import { goto } from '$app/navigation';
     import type { SteamUser } from '$lib/steamapi';
@@ -15,7 +14,7 @@
     onMount(async () => {
         const userData = await getLocalStorageItem(LS_KEY_USER);
 
-        if (!userData) await goto('/');
+        if (!userData) goto('/');
 
         user = userData as SteamUser;
     });

@@ -1,11 +1,12 @@
 <script lang="ts">
     import { type SteamWishlist } from "$lib/steamapi";
     import { onMount } from "svelte";
-    import axios from "axios";
-    import WishlistCollection, { type FilterOptions } from "$lib/components/WishlistCollection.svelte";
+    import WishlistCollection from "$lib/components/WishlistCollection.svelte";
     import { bulkRemoveLocalStorageItems, getLocalStorageItem, LS_KEY_GAME_CATEGORIES, LS_KEY_GAME_GENRES, LS_KEY_WISHLIST, LS_KEY_WISHLIST_CURRENT_PAGE, setLocalStorageItem } from "$lib/localstorage";
     import InifiniteScrollContainer from "$lib/components/InifiniteScrollContainer.svelte";
     import { goto } from "$app/navigation";
+    import type { FilterOptions } from "$lib/components/WishlistFilter.svelte";
+    import libraryBgImage from "$lib/image/library_bg.webp";
 
     let wishlist = $state<SteamWishlist>();
     let gameCategories = $state<FilterOptions>({});
@@ -14,7 +15,7 @@
     
     let loadingWishlist = $state(true);
     
-    let bgHighlight = $state<string|null>(null);
+    let bgHighlight = $state<string>(libraryBgImage);
 
     onMount(async () => {
         currentPage = await (getLocalStorageItem(LS_KEY_WISHLIST_CURRENT_PAGE) ?? 0) as number;
@@ -23,23 +24,19 @@
     });
 
     const loadWishlist = async () => {
-        bgHighlight = null;
+        bgHighlight = libraryBgImage;
         loadingWishlist = true;
 
         const savedWishlist = await getLocalStorageItem(LS_KEY_WISHLIST);
 
-        if (!savedWishlist) await goto('/wishlist/fetch');
+        if (!savedWishlist) goto('/wishlist/fetch');
 
-        if (savedWishlist) {
-            wishlist = savedWishlist as SteamWishlist;
-        } else {
-            wishlist = await fetchWishlist();
-            setLocalStorageItem(LS_KEY_WISHLIST, wishlist);
-            bulkRemoveLocalStorageItems([
-                LS_KEY_GAME_CATEGORIES,
-                LS_KEY_GAME_GENRES
-            ]);
-        }
+        wishlist = savedWishlist as SteamWishlist;
+
+        bulkRemoveLocalStorageItems([
+            LS_KEY_GAME_CATEGORIES,
+            LS_KEY_GAME_GENRES
+        ])
 
         loadGameCategories();
         loadGameGenres();
@@ -55,16 +52,10 @@
         gameGenres = await getLocalStorageItem(LS_KEY_GAME_GENRES, getAvailableGameGenres) as FilterOptions;
     }
 
-    const fetchWishlist = async (page = 0) => {
-        const response = await axios.get('/api/steam/wishlist', {
-            params: { steamid: 0, page }
-        });
-        return response.data as SteamWishlist;
-    }
-
     const getAvailableGameCategories = async () => {
         const categories: FilterOptions = {};
         wishlist?.items.forEach((item) => {
+            if (!item.game.categories) return;
             item.game.categories.forEach((category) => {
                 categories[category.id] = category.description;
             });
@@ -75,6 +66,7 @@
     const getAvailableGameGenres = async () => {
         const genres: FilterOptions = {};
         wishlist?.items.forEach((item) => {
+            if (!item.game.genres) return;
             item.game.genres.forEach((genre) => {
                 genres[genre.id] = genre.description;
             });
@@ -84,7 +76,7 @@
 </script>
 
 <div
-    class="flex flex-1 bg-center bg-repeat-y bg-[size:100%] transition-all ease-out duration-500"
+    class="flex flex-1 bg-center bg-repeat-y bg-[length:100%]"
     style={`background-image: url(${bgHighlight})`}
 >
     {#if loadingWishlist}
